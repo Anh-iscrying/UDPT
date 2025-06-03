@@ -80,13 +80,13 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. demo.proto
 
 Lệnh này sẽ cập nhật (hoặc tạo mới) các file demo_pb2.py và demo_pb2_grpc.py.
 
-#Cấu Hình Cụm
+# Cấu Hình Cụm
 Thông tin về các node trong cụm (Node ID và địa chỉ IP:Port) được hardcode trong biến CLUSTER_CONFIG ở đầu file server.py và CLIENT_SIDE_CLUSTER_CONFIG trong client.py. Hiện tại, hệ thống được cấu hình với 3 node:
 node1: localhost:50051
 node2: localhost:50052
 node3: localhost:50053
 
-#Cách Chạy Hệ Thống
+# Cách Chạy Hệ Thống
 Hệ thống được thiết kế để chạy với cụm 3 node trên các cổng 50051, 50052, và 50053 trên localhost.
 Chạy Server Nodes
 Bạn cần mở 3 cửa sổ terminal riêng biệt.
@@ -109,7 +109,7 @@ Luồng Heartbeat sẽ bắt đầu.
 Luồng Khôi phục dữ liệu (attempt_data_recovery) sẽ chạy. Ban đầu, nếu tất cả các node cùng khởi động, chúng có thể không khôi phục được gì từ nhau hoặc khôi phục từ một store rỗng.
 Sau một vài giây, các node sẽ bắt đầu nhận diện trạng thái ALIVE của nhau qua heartbeat.
 
-#Chạy Client Demo
+# Chạy Client Demo
 Sau khi tất cả các server node đã khởi động và chạy ổn định (đợi khoảng 15-20 giây để heartbeat và khôi phục ban đầu hoàn tất), mở một Terminal thứ 4 và chạy chương trình client:
 ```bash
 python client.py
