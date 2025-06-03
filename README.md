@@ -111,16 +111,11 @@ Trong Terminal 3:
 python server.py 50053
 ```
 Quan sát Log Server Khi Khởi Động:
-
 - Mỗi server sẽ in ra NODE_ID và PORT của nó.
-
 - Nó sẽ cố gắng tải dữ liệu từ file data_<node_id>.json (nếu có).
-
-Luồng Heartbeat sẽ bắt đầu.
-
-Luồng Khôi phục dữ liệu (attempt_data_recovery) sẽ chạy. Ban đầu, nếu tất cả các node cùng khởi động, chúng có thể không khôi phục được gì từ nhau hoặc khôi phục từ một store rỗng.
-
-Sau một vài giây, các node sẽ bắt đầu nhận diện trạng thái ALIVE của nhau qua heartbeat.
+- Luồng Heartbeat sẽ bắt đầu.
+- Luồng Khôi phục dữ liệu (attempt_data_recovery) sẽ chạy. Ban đầu, nếu tất cả các node cùng khởi động, chúng có thể không khôi phục được gì từ nhau hoặc khôi phục từ một store rỗng.
+- Sau một vài giây, các node sẽ bắt đầu nhận diện trạng thái ALIVE của nhau qua heartbeat.
 
 ### Chạy Client Demo
 Sau khi tất cả các server node đã khởi động và chạy ổn định (đợi khoảng 15-20 giây để heartbeat và khôi phục ban đầu hoàn tất), mở một Terminal thứ 4 và chạy chương trình client:
@@ -128,14 +123,10 @@ Sau khi tất cả các server node đã khởi động và chạy ổn định 
 python client.py
 ```
 Client sẽ tự động thực hiện một loạt các kịch bản:
-
-Kiểm tra health ban đầu của các server.
-
-Kịch bản demo thông thường (PUT/GET nhiều key để kiểm tra sharding, forwarding, sao lưu).
-
-Kịch bản kiểm thử tính chịu lỗi (yêu cầu người dùng tắt một node và quan sát hành vi hệ thống).
-
-Kịch bản kiểm thử khôi phục dữ liệu (yêu cầu người dùng khởi động lại node đã tắt và quan sát quá trình khôi phục).
+- Kiểm tra health ban đầu của các server.
+- Kịch bản demo thông thường (PUT/GET nhiều key để kiểm tra sharding, forwarding, sao lưu).
+- Kịch bản kiểm thử tính chịu lỗi (yêu cầu người dùng tắt một node và quan sát hành vi hệ thống).
+- Kịch bản kiểm thử khôi phục dữ liệu (yêu cầu người dùng khởi động lại node đã tắt và quan sát quá trình khôi phục).
 
 ## Kiểm Thử
 File client.py được thiết kế để tự động kiểm thử các tính năng chính.
@@ -144,64 +135,43 @@ File client.py được thiết kế để tự động kiểm thử các tính 
 Cách thực hiện: Chạy client.py (phần "KỊCH BẢN DEMO THÔNG THƯỜNG").
 
 Quan sát:
-
-Client PUT các key khác nhau. Log của client và server sẽ cho thấy key được hash về primary node nào.
-
-Nếu client gửi request đến node không phải primary, log server sẽ cho thấy request được chuyển tiếp (forward).
-
-Log của primary node sẽ cho thấy nó sao lưu dữ liệu (PUT) hoặc lệnh xóa (DELETE) đến các replica.
-
-Log của các replica node sẽ cho thấy chúng nhận và áp dụng lệnh sao lưu.
-
-Client GET key từ các node khác nhau đều nhận được dữ liệu đúng (hoặc KHÔNG TÌM THẤY nếu đã xóa).
+- Client PUT các key khác nhau. Log của client và server sẽ cho thấy key được hash về primary node nào.
+- Nếu client gửi request đến node không phải primary, log server sẽ cho thấy request được chuyển tiếp (forward).
+- Log của primary node sẽ cho thấy nó sao lưu dữ liệu (PUT) hoặc lệnh xóa (DELETE) đến các replica.
+- Log của các replica node sẽ cho thấy chúng nhận và áp dụng lệnh sao lưu.
+- Client GET key từ các node khác nhau đều nhận được dữ liệu đúng (hoặc KHÔNG TÌM THẤY nếu đã xóa).
 
 ---
 
 ### Kiểm Thử Tính Chịu Lỗi
 Cách thực hiện: client.py sẽ tự động vào "KỊCH BẢN KIỂM THỬ CHỊU LỖI".
-
-Client PUT một key (fault_key...) có primary là node2 và một key (survive_key...) có primary là một node khác (ví dụ node1).
-
-Client sẽ yêu cầu bạn tắt node2.
-
-Sau khi bạn tắt node2 và nhấn Enter trên client, client sẽ chờ để các node còn lại (node1, node3) phát hiện node2 đã DEAD qua heartbeat.
+- Client PUT một key (fault_key...) có primary là node2 và một key (survive_key...) có primary là một node khác (ví dụ node1).
+- Client sẽ yêu cầu bạn tắt node2.
+- Sau khi bạn tắt node2 và nhấn Enter trên client, client sẽ chờ để các node còn lại (node1, node3) phát hiện node2 đã DEAD qua heartbeat.
 
 Quan sát:
-
-Log của node1 và node3 sẽ báo [HEARTBEAT] ... peer node2 ... -> DEAD.
-
-Client thử GET/PUT fault_key...: Request sẽ thất bại với lỗi UNAVAILABLE vì node1 (hoặc node3) từ chối forward đến node2 (đã DEAD).
-
-Client thử GET/PUT survive_key...: Request sẽ thành công. node1 (primary) sẽ xử lý, nhưng khi sao lưu, nó sẽ log là bỏ qua node2 vì DEAD.
+- Log của node1 và node3 sẽ báo [HEARTBEAT] ... peer node2 ... -> DEAD.
+- Client thử GET/PUT fault_key...: Request sẽ thất bại với lỗi UNAVAILABLE vì node1 (hoặc node3) từ chối forward đến node2 (đã DEAD).
+- Client thử GET/PUT survive_key...: Request sẽ thành công. node1 (primary) sẽ xử lý, nhưng khi sao lưu, nó sẽ log là bỏ qua node2 vì DEAD.
 
 ---
 
 ### Kiểm Thử Khôi Phục Dữ Liệu
 Cách thực hiện: Sau kịch bản chịu lỗi, client.py sẽ vào "KỊCH BẢN KIỂM THỬ KHÔI PHỤC DỮ LIỆU". node2 vẫn đang tắt.
-
-Client PUT một key mới (rec_down_key...) vào hệ thống (ví dụ qua node1). Key này sẽ được lưu trên node1 và node3. node2 không có nó.
-
-Client sẽ yêu cầu bạn khởi động lại node2.
-
-Sau khi bạn khởi động lại node2 và nhấn Enter trên client, client sẽ chờ để node2 sống lại, được phát hiện, và quan trọng nhất là thực hiện khôi phục dữ liệu.
+- Client PUT một key mới (rec_down_key...) vào hệ thống (ví dụ qua node1). Key này sẽ được lưu trên node1 và node3. node2 không có nó.
+- Client sẽ yêu cầu bạn khởi động lại node2.
+- Sau khi bạn khởi động lại node2 và nhấn Enter trên client, client sẽ chờ để node2 sống lại, được phát hiện, và quan trọng nhất là thực hiện khôi phục dữ liệu.
 
 Quan sát:
-
-Log của node2 khi khởi động lại: Sẽ có các dòng [RECOVERY], cho thấy nó đang cố gắng lấy snapshot từ node1 hoặc node3. Nó sẽ log "Khôi phục dữ liệu thành công từ nodeX..."
-
-Log của node1 và node3: Sẽ báo [HEARTBEAT] ... peer node2 ... -> ALIVE. Node được node2 yêu cầu snapshot sẽ log [SNAPSHOT] ... Nhận yêu cầu RequestFullSnapshot....
-
-Client thử GET rec_down_key... từ node2: Request này nên thành công và trả về giá trị đúng, chứng tỏ node2 đã khôi phục được dữ liệu được ghi khi nó offline.
+- Log của node2 khi khởi động lại: Sẽ có các dòng [RECOVERY], cho thấy nó đang cố gắng lấy snapshot từ node1 hoặc node3. Nó sẽ log "Khôi phục dữ liệu thành công từ nodeX..."
+- Log của node1 và node3: Sẽ báo [HEARTBEAT] ... peer node2 ... -> ALIVE. Node được node2 yêu cầu snapshot sẽ log [SNAPSHOT] ... Nhận yêu cầu RequestFullSnapshot....
+- Client thử GET rec_down_key... từ node2: Request này nên thành công và trả về giá trị đúng, chứng tỏ node2 đã khôi phục được dữ liệu được ghi khi nó offline.
 
 ---
 
 ## Các RPC Chính (trong demo.proto)
-PutKey(PutKeyRequest) returns (PutKeyReturn): Ghi hoặc cập nhật một cặp key-value. Có cờ is_replica.
-
-GetKey(Key) returns (Value): Lấy giá trị của một key.
-
-DeleteKey(DeleteKeyRequest) returns (Message): Xóa một key. Có cờ is_replica.
-
-CheckHealth(HealthCheckRequest) returns (HealthCheckResponse): Được sử dụng cho heartbeat.
-
-RequestFullSnapshot(EmptyRequest) returns (FullSnapshotResponse): Được sử dụng bởi node khởi động lại để yêu cầu dữ liệu từ node khác.
+- PutKey(PutKeyRequest) returns (PutKeyReturn): Ghi hoặc cập nhật một cặp key-value. Có cờ is_replica.
+- GetKey(Key) returns (Value): Lấy giá trị của một key.
+- DeleteKey(DeleteKeyRequest) returns (Message): Xóa một key. Có cờ is_replica.
+- CheckHealth(HealthCheckRequest) returns (HealthCheckResponse): Được sử dụng cho heartbeat.
+- RequestFullSnapshot(EmptyRequest) returns (FullSnapshotResponse): Được sử dụng bởi node khởi động lại để yêu cầu dữ liệu từ node khác.
