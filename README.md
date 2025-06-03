@@ -82,14 +82,20 @@ Lệnh này sẽ cập nhật (hoặc tạo mới) các file demo_pb2.py và dem
 
 ### Cấu Hình Cụm
 Thông tin về các node trong cụm (Node ID và địa chỉ IP:Port) được hardcode trong biến CLUSTER_CONFIG ở đầu file server.py và CLIENT_SIDE_CLUSTER_CONFIG trong client.py. Hiện tại, hệ thống được cấu hình với 3 node:
+
 node1: localhost:50051
+
 node2: localhost:50052
+
 node3: localhost:50053
 
 ### Cách Chạy Hệ Thống
 Hệ thống được thiết kế để chạy với cụm 3 node trên các cổng 50051, 50052, và 50053 trên localhost.
+
 Chạy Server Nodes
+
 Bạn cần mở 3 cửa sổ terminal riêng biệt.
+
 Trong Terminal 1:
 ```bash
 python server.py 50051
