@@ -112,9 +112,9 @@ python server.py 50053
 ```
 Quan sát Log Server Khi Khởi Động:
 
-Mỗi server sẽ in ra NODE_ID và PORT của nó.
+- Mỗi server sẽ in ra NODE_ID và PORT của nó.
 
-Nó sẽ cố gắng tải dữ liệu từ file data_<node_id>.json (nếu có).
+- Nó sẽ cố gắng tải dữ liệu từ file data_<node_id>.json (nếu có).
 
 Luồng Heartbeat sẽ bắt đầu.
 
