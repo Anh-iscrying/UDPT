@@ -61,6 +61,8 @@ Trong thư mục gốc của dự án (nơi chứa `demo.proto`), chạy lệnh 
 
 ```bash
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. demo.proto
+```
+
 Use code with caution.
 Lệnh này sẽ cập nhật (hoặc tạo mới) các file demo_pb2.py và demo_pb2_grpc.py.
 Cách Chạy Hệ Thống
