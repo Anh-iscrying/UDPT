@@ -63,40 +63,39 @@ Trong thư mục gốc của dự án (nơi chứa `demo.proto`), chạy lệnh 
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. demo.proto
 ```
 
-Use code with caution.
 Lệnh này sẽ cập nhật (hoặc tạo mới) các file demo_pb2.py và demo_pb2_grpc.py.
 Cách Chạy Hệ Thống
 Hệ thống được thiết kế để chạy với cụm 3 node trên các cổng 50051, 50052, và 50053 trên localhost.
 Chạy Server Nodes
 Bạn cần mở 3 cửa sổ terminal riêng biệt.
 Trong Terminal 1:
+```bash
 python server.py 50051
-Use code with caution.
-Bash
+```
 Trong Terminal 2:
+```bash
 python server.py 50052
-Use code with caution.
-Bash
+```
 Trong Terminal 3:
+```bash
 python server.py 50053
-Use code with caution.
-Bash
+```
 Sau khi khởi động, mỗi server sẽ in ra log cho biết nó đang lắng nghe trên cổng nào và các peer của nó. Dữ liệu của mỗi node sẽ được lưu trong file data_node_<port>.json (ví dụ: data_node_50051.json).
 Chạy Client Demo
 Sau khi tất cả các server node đã khởi động và chạy, mở một Terminal thứ 4 và chạy chương trình client:
+```bash
 python client.py
-Use code with caution.
-Bash
+```
 Client sẽ tự động thực hiện một loạt các kịch bản PUT, GET, DELETE với các node khác nhau để demo tính năng sao lưu và hoạt động cơ bản. Quan sát log từ client và từ các server node để thấy sự tương tác.
 Kiểm Tra Trạng Thái Node (Health Check)
 Bạn có thể sử dụng health_check_client.py để kiểm tra trạng thái của từng node:
+```bash
 python health_check_client.py localhost:50051 localhost:50052 localhost:50053
-Use code with caution.
-Bash
+```
 Hoặc kiểm tra từng node riêng lẻ:
+```bash
 python health_check_client.py localhost:50051
-Use code with caution.
-Bash
+```
 Kiểm Thử
 Kiểm tra PUT và Sao lưu:
 Chạy client.py. Quan sát thao tác PUT được gửi đến một node.
