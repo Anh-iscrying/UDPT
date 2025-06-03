@@ -43,8 +43,7 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán đ
     ```
 
 ## Cấu Trúc Dự Án
-Use code with caution.
-Markdown
+```
 .
 ├── demo.proto # Định nghĩa Protocol Buffer cho gRPC services và messages
 ├── demo_pb2.py # Code Python được sinh tự động từ demo.proto (messages)
@@ -53,6 +52,8 @@ Markdown
 ├── client.py # Chương trình client để tương tác với hệ thống
 ├── health_check_client.py # Client đơn giản để kiểm tra health của các node
 └── README.md # File này
+```
+
 ## Cách Xây Dựng (Sinh Code gRPC)
 
 Mỗi khi bạn thay đổi file `demo.proto` (ví dụ: thêm RPC mới, sửa message), bạn cần phải sinh lại code Python tương ứng.
@@ -96,26 +97,53 @@ Hoặc kiểm tra từng node riêng lẻ:
 ```bash
 python health_check_client.py localhost:50051
 ```
-Kiểm Thử
-Kiểm tra PUT và Sao lưu:
-Chạy client.py. Quan sát thao tác PUT được gửi đến một node.
-Kiểm tra log của node đó và các node peer để thấy dữ liệu được lưu và sao lưu.
-Kiểm tra các file data_node_*.json để xác nhận dữ liệu được ghi.
-Client sẽ tự động GET key từ tất cả các node để xác nhận sao lưu.
-Kiểm tra DELETE và Sao lưu:
-client.py sẽ thực hiện thao tác DELETE. Quan sát lệnh xóa được gửi đến một node.
-Kiểm tra log của node đó và các node peer để thấy lệnh xóa được xử lý và sao lưu.
-Client sẽ tự động GET key đã xóa từ tất cả các node để xác nhận nó không còn tồn tại.
-Kiểm tra khi một node tắt (Mô phỏng lỗi - Sẽ hoàn thiện hơn ở các bước sau):
-Chạy 3 server.
-Thực hiện PUT một vài key-value bằng client.py.
-Tắt một trong các server node (ví dụ, bằng cách nhấn Ctrl+C trong terminal của nó).
-Sử dụng client.py để thử GET các key đã PUT từ các node còn lại. Chúng vẫn nên trả về dữ liệu do cơ chế sao lưu.
-Thử PUT một key mới vào một node còn sống. Thao tác này vẫn nên thành công trên node đó và được sao lưu đến các node còn sống khác. Log trên node thực hiện PUT có thể báo lỗi khi cố gắng sao lưu đến node đã chết.
-Hướng Phát Triển Tiếp Theo (Theo Yêu Cầu Dự Án)
-Phân Vùng Dữ Liệu (Sharding): Triển khai cơ chế để mỗi node chỉ chịu trách nhiệm chính cho một phần dữ liệu (ví dụ: sử dụng consistent hashing hoặc hash(key) % N).
-Chuyển Tiếp Yêu Cầu (Request Forwarding): Nếu một node nhận request cho một key không thuộc phân vùng của nó, nó sẽ chuyển tiếp request đến node phù hợp.
-Phát Hiện Lỗi Chủ Động (Heartbeat): Các node gửi heartbeat cho nhau để phát hiện node nào bị lỗi/tắt.
-Quản Lý Thành Viên Cụm Nâng Cao: Cập nhật danh sách node "sống" và "chết".
-Khôi Phục Dữ Liệu: Khi một node bị lỗi khởi động lại, nó cần đồng bộ dữ liệu bị thiếu từ các node khác.
-Cải thiện Client CLI: Thêm các lệnh tương tác cho client.
+## Kiểm Thử
+
+### Kiểm tra PUT và Sao lưu:
+
+- Chạy `client.py`. Quan sát thao tác PUT được gửi đến một node.  
+- Kiểm tra log của node đó và các node peer để thấy dữ liệu được lưu và sao lưu.  
+- Kiểm tra các file `data_node_*.json` để xác nhận dữ liệu được ghi.  
+- Client sẽ tự động GET key từ tất cả các node để xác nhận sao lưu.
+
+---
+
+### Kiểm tra DELETE và Sao lưu:
+
+- `client.py` sẽ thực hiện thao tác DELETE. Quan sát lệnh xóa được gửi đến một node.  
+- Kiểm tra log của node đó và các node peer để thấy lệnh xóa được xử lý và sao lưu.  
+- Client sẽ tự động GET key đã xóa từ tất cả các node để xác nhận nó không còn tồn tại.
+
+---
+
+### Kiểm tra khi một node tắt (Mô phỏng lỗi - Sẽ hoàn thiện hơn ở các bước sau):
+
+- Chạy 3 server.  
+- Thực hiện PUT một vài key-value bằng `client.py`.  
+- Tắt một trong các server node (ví dụ, bằng cách nhấn Ctrl+C trong terminal của nó).  
+- Sử dụng `client.py` để thử GET các key đã PUT từ các node còn lại. Chúng vẫn nên trả về dữ liệu do cơ chế sao lưu.  
+- Thử PUT một key mới vào một node còn sống.  
+  - Thao tác này vẫn nên thành công trên node đó và được sao lưu đến các node còn sống khác.  
+  - Log trên node thực hiện PUT có thể báo lỗi khi cố gắng sao lưu đến node đã chết.
+
+---
+
+## Hướng Phát Triển Tiếp Theo (Theo Yêu Cầu Dự Án)
+
+- **Phân Vùng Dữ Liệu (Sharding):**  
+  Triển khai cơ chế để mỗi node chỉ chịu trách nhiệm chính cho một phần dữ liệu (ví dụ: sử dụng consistent hashing hoặc `hash(key) % N`).
+
+- **Chuyển Tiếp Yêu Cầu (Request Forwarding):**  
+  Nếu một node nhận request cho một key không thuộc phân vùng của nó, nó sẽ chuyển tiếp request đến node phù hợp.
+
+- **Phát Hiện Lỗi Chủ Động (Heartbeat):**  
+  Các node gửi heartbeat cho nhau để phát hiện node nào bị lỗi/tắt.
+
+- **Quản Lý Thành Viên Cụm Nâng Cao:**  
+  Cập nhật danh sách node "sống" và "chết".
+
+- **Khôi Phục Dữ Liệu:**  
+  Khi một node bị lỗi khởi động lại, nó cần đồng bộ dữ liệu bị thiếu từ các node khác.
+
+- **Cải thiện Client CLI:**  
+  Thêm các lệnh tương tác cho client.
