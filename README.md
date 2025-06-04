@@ -4,20 +4,20 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán b�
 
 ## Mục Lục
 
-- [Tính Năng Chính]
-- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
-- [Cài Đặt](#cài-đặt)
-- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
-- [Cách Xây Dựng (Sinh Code gRPC)](#cách-xây-dựng-sinh-code-grpc)
-- [Cấu Hình Cụm](#cấu-hình-cụm)
-- [Cách Chạy Hệ Thống](#cách-chạy-hệ-thống)
-  - [Chạy Server Nodes](#chạy-server-nodes)
-  - [Chạy Client Demo](#chạy-client-demo)
-- [Kiểm Thử Các Tính Năng](#kiểm-thử-các-tính-năng)
-  - [Hoạt Động Cơ Bản (Sharding, Forwarding, Sao Lưu)](#hoạt-động-cơ-bản-sharding-forwarding-sao-lưu)
-  - [Kiểm Thử Tính Chịu Lỗi](#kiểm-thử-tính-chịu-lỗi)
-  - [Kiểm Thử Khôi Phục Dữ Liệu](#kiểm-thử-khôi-phục-dữ-liệu)
-- [Các RPC Chính](#các-rpc-chính)
+- Tính Năng Chính
+- Yêu Cầu Hệ Thống
+- Cài Đặt
+- Cấu Trúc Dự Án
+- Cách Xây Dựng (Sinh Code gRPC)
+- Cấu Hình Cụm
+- Cách Chạy Hệ Thống
+  + Chạy Server Nodes
+  + Chạy Client Demo
+- Kiểm Thử Các Tính Năng
+  + Hoạt Động Cơ Bản (Sharding, Forwarding, Sao Lưu)
+  + Kiểm Thử Tính Chịu Lỗi
+  + Kiểm Thử Khôi Phục Dữ Liệu
+- Các RPC Chính
 
 ## Tính Năng Chính
 
