@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.keyvalue";
+option java_outer_classname = "keyvalueProto";
+option objc_class_prefix = "RTG";
+
+package keyvalue;
+
+service KeyValue {
+  rpc TinhTong(TinhTongRequest) returns (KetQuaTinhTong) {}
+  rpc PutKey(PutKeyRequest) returns (PutKeyReturn){}
+
+  rpc GetKey(Key) returns (Value) {} // Giữ nguyên Key và Value messages như cũ
+  rpc DeleteKey(DeleteKeyRequest) returns (Message) {} 
+  
+  rpc CheckHealth(HealthCheckRequest) returns (HealthCheckResponse) {}
+
+  // RPC mới cho việc yêu cầu snapshot
+  rpc RequestFullSnapshot(EmptyRequest) returns (FullSnapshotResponse) {}
+}
+
+message PutKeyRequest {
+  string key = 1;
+  string value = 2;
+  bool is_replica = 3;
+}
+
+message PutKeyReturn {
+  int32 code = 1;
+  string message = 2;
+}
+
+message TinhTongRequest {
+  int32 a = 1;
+  int32 b = 2;
+  string c = 3;
+}
+
+message KetQuaTinhTong {
+  int32 answer = 1;
+}
+
+message Message {
+  string msg = 1;
+}
+
+message Key {
+  string key = 1;
+}
+
+message DeleteKeyRequest {
+  string key = 1;
+  bool is_replica = 2;
+}
+
+message Value {
+  string value = 1;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+}
+
+// Messages mới cho Snapshot
+message EmptyRequest {} // Có thể dùng cho các request không cần tham số
+
+message FullSnapshotResponse {
+  string data_json = 1; // Toàn bộ store dưới dạng chuỗi JSON
+}
