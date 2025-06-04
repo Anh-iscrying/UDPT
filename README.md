@@ -4,7 +4,7 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán b�
 
 ## Mục Lục
 
-- [Tính Năng Chính](#tính-năng-chính)
+- [Tính Năng Chính]
 - [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
 - [Cài Đặt](#cài-đặt)
 - [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
