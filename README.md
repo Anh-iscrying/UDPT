@@ -1,23 +1,23 @@
 # Hệ Thống Lưu Trữ Key-Value Phân Tán Đơn Giản
 
-Dự án này triển khai một hệ thống lưu trữ key-value phân tán bằng Python và gRPC. Hệ thống bao gồm nhiều node, mỗi node chịu trách nhiệm chính cho một phần dữ liệu (sharding), có khả năng chuyển tiếp yêu cầu, sao lưu dữ liệu sang các node khác, phát hiện lỗi node, và khôi phục dữ liệu khi một node khởi động lại.
+Dự án này triển khai một hệ thống lưu trữ key-value phân tán bằng Python và gRPC. Hệ thống bao gồm nhiều node, mỗi node chịu trách nhiệm chính cho một phần dữ liệu (sharding), có khả năng chuyển tiếp yêu cầu, sao lưu dữ liệu sang các node khác, phát hiện lỗi node, và khôi phục dữ liệu khi một node khởi động lại. Một giao diện người dùng đầu cuối (TUI) được cung cấp để tương tác và demo hệ thống.
 
 ## Mục Lục
 
-- Tính Năng Chính
-- Yêu Cầu Hệ Thống
-- Cài Đặt
-- Cấu Trúc Dự Án
-- Cách Xây Dựng (Sinh Code gRPC)
-- Cấu Hình Cụm
-- Cách Chạy Hệ Thống
-  + Chạy Server Nodes
-  + Chạy Client Demo
-- Kiểm Thử Các Tính Năng
-  + Hoạt Động Cơ Bản (Sharding, Forwarding, Sao Lưu)
-  + Kiểm Thử Tính Chịu Lỗi
-  + Kiểm Thử Khôi Phục Dữ Liệu
-- Các RPC Chính
+- [Tính Năng Chính](#tính-năng-chính)
+- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
+- [Cài Đặt](#cài-đặt)
+- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+- [Cách Xây Dựng (Sinh Code gRPC)](#cách-xây-dựng-sinh-code-grpc)
+- [Cấu Hình Cụm](#cấu-hình-cụm)
+- [Cách Chạy Hệ Thống](#cách-chạy-hệ-thống)
+  - [Chạy Server Nodes](#chạy-server-nodes)
+  - [Chạy Client TUI (Terminal User Interface)](#chạy-client-tui-terminal-user-interface)
+- [Kiểm Thử Các Tính Năng (Sử dụng Client TUI)](#kiểm-thử-các-tính-năng-sử-dụng-client-tui)
+  - [Hoạt Động Cơ Bản (Sharding, Forwarding, Sao Lưu)](#hoạt-động-cơ-bản-sharding-forwarding-sao-lưu)
+  - [Kiểm Thử Tính Chịu Lỗi (Node Down)](#kiểm-thử-tính-chịu-lỗi-node-down)
+  - [Kiểm Thử Khôi Phục Dữ Liệu (Node Restart)](#kiểm-thử-khôi-phục-dữ-liệu-node-restart)
+- [Các RPC Chính](#các-rpc-chính)
 
 ## Tính Năng Chính
 
@@ -30,18 +30,23 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán b�
     *   Client có thể kết nối tới bất kỳ node nào.
     *   Nếu node nhận request không phải là primary cho key đó, request sẽ được tự động chuyển tiếp đến node primary phù hợp.
 *   **Sao Lưu Dữ Liệu:**
-    *   Khi node primary thực hiện `PUT` hoặc `DELETE`, thao tác này sẽ được **sao lưu** đến tất cả các node khác (replicas) trong cụm.
+    *   Khi node primary thực hiện `PUT` hoặc `DELETE`, thao tác này sẽ được **sao lưu** đến tất cả các node khác (replicas) trong cụm đang hoạt động.
     *   Mỗi cặp key-value có ít nhất 2 bản sao (1 primary, và các bản sao trên các node còn lại).
 *   **Phát Hiện Lỗi Node (Heartbeat):**
-    *   Các node gửi heartbeat định kỳ cho nhau để theo dõi trạng thái (`ALIVE`, `DEAD`, `UNKNOWN`).
+    *   Các node server gửi heartbeat định kỳ cho nhau để theo dõi trạng thái (`ALIVE`, `DEAD`, `UNKNOWN`).
+    *   Client TUI cũng thực hiện kiểm tra health định kỳ để hiển thị trạng thái cụm.
     *   Node primary sẽ không cố gắng sao lưu đến các replica đang ở trạng thái `DEAD`.
     *   Node sẽ không cố gắng chuyển tiếp request đến primary node đang ở trạng thái `DEAD` (client sẽ nhận lỗi `UNAVAILABLE`).
 *   **Khôi Phục Dữ Liệu (Snapshot Recovery):**
-    *   Khi một node khởi động lại sau khi bị lỗi, nó sẽ cố gắng yêu cầu một **ảnh chụp (snapshot) đầy đủ** dữ liệu từ một node khác đang hoạt động trong cụm.
+    *   Khi một node server khởi động lại sau khi bị lỗi, nó sẽ cố gắng yêu cầu một **ảnh chụp (snapshot) đầy đủ** dữ liệu từ một node khác đang hoạt động trong cụm.
     *   Node khởi động lại sẽ ghi đè store cục bộ của mình bằng dữ liệu từ snapshot để đồng bộ lại.
 *   **Giao Tiếp gRPC:** Các node và client giao tiếp với nhau qua gRPC và Protocol Buffers.
-*   **Lưu Trữ Dữ Liệu:** Mỗi node lưu trữ dữ liệu của mình (bao gồm cả phần nó là primary và các bản sao) vào một file JSON cục bộ (`data_<node_id>.json`).
-*   **Client Demo Nâng Cao:** Một client CLI thực hiện các kịch bản demo tự động để kiểm thử hoạt động bình thường, tính chịu lỗi, và khả năng khôi phục dữ liệu.
+*   **Lưu Trữ Dữ Liệu:** Mỗi node lưu trữ dữ liệu của mình vào một file JSON cục bộ (`data_<node_id>.json`).
+*   **Client TUI (Terminal User Interface):** Một giao diện người dùng đầu cuối tương tác được xây dựng bằng Textual, cho phép:
+    *   Chọn server đích để gửi request.
+    *   Thực hiện các lệnh PUT, GET, DELETE.
+    *   Hiển thị log của client.
+    *   Hiển thị trạng thái (`ALIVE`/`DEAD`) của tất cả các node trong cụm theo thời gian thực.
 
 ## Yêu Cầu Hệ Thống
 
@@ -50,11 +55,12 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán b�
 
 ## Cài Đặt
 
-1.  Clone repository này (nếu có) hoặc tạo một thư mục dự án và đặt các file (`server.py`, `client.py`, `demo.proto`) vào đó.
+1.  Clone repository này (nếu có) hoặc tạo một thư mục dự án và đặt các file vào đó.
 2.  Cài đặt các thư viện Python cần thiết:
     ```bash
-    pip install grpcio grpcio-tools
+    pip install grpcio grpcio-tools textual
     ```
+    *(Lưu ý: `textual` đã được thêm vào cho client TUI).*
 
 ## Cấu Trúc Dự Án
 ```
@@ -63,8 +69,8 @@ Dự án này triển khai một hệ thống lưu trữ key-value phân tán b�
 ├── demo_pb2.py # Code Python được sinh tự động từ demo.proto (messages)
 ├── demo_pb2_grpc.py # Code Python được sinh tự động từ demo.proto (services/stubs)
 ├── server.py # Logic của một node server trong cụm
-├── client.py # Chương trình client để tương tác với hệ thống
-├── health_check_client.py # Client đơn giản để kiểm tra health của các node
+├── textual_kv_client.py # Client TUI để tương tác và demo hệ thống
+├──  kv_app.tcss # File CSS cho client TUI (Textual)
 └── README.md # File này
 ```
 
@@ -117,55 +123,57 @@ Quan sát Log Server Khi Khởi Động:
 - Luồng Khôi phục dữ liệu (attempt_data_recovery) sẽ chạy. Ban đầu, nếu tất cả các node cùng khởi động, chúng có thể không khôi phục được gì từ nhau hoặc khôi phục từ một store rỗng.
 - Sau một vài giây, các node sẽ bắt đầu nhận diện trạng thái ALIVE của nhau qua heartbeat.
 
-### Chạy Client Demo
+### Chạy Client TUI (Terminal User Interface)
 Sau khi tất cả các server node đã khởi động và chạy ổn định (đợi khoảng 15-20 giây để heartbeat và khôi phục ban đầu hoàn tất), mở một Terminal thứ 4 và chạy chương trình client:
 ```bash
-python client.py
+python textual_kv_client.py
 ```
-Client sẽ tự động thực hiện một loạt các kịch bản:
-- Kiểm tra health ban đầu của các server.
-- Kịch bản demo thông thường (PUT/GET nhiều key để kiểm tra sharding, forwarding, sao lưu).
-- Kịch bản kiểm thử tính chịu lỗi (yêu cầu người dùng tắt một node và quan sát hành vi hệ thống).
-- Kịch bản kiểm thử khôi phục dữ liệu (yêu cầu người dùng khởi động lại node đã tắt và quan sát quá trình khôi phục).
+Giao diện TUI sẽ xuất hiện, hiển thị các ô nhập liệu, log client, và trạng thái của các node trong cụm.
 
 ## Kiểm Thử
-File client.py được thiết kế để tự động kiểm thử các tính năng chính.
+Sử dụng TUI client để thực hiện các kịch bản sau và quan sát log trên TUI cũng như trên các terminal của server.
 
 ### Hoạt Động Cơ Bản (Sharding, Forwarding, Sao Lưu)
-Cách thực hiện: Chạy client.py (phần "KỊCH BẢN DEMO THÔNG THƯỜNG").
-
-Quan sát:
-- Client PUT các key khác nhau. Log của client và server sẽ cho thấy key được hash về primary node nào.
-- Nếu client gửi request đến node không phải primary, log server sẽ cho thấy request được chuyển tiếp (forward).
-- Log của primary node sẽ cho thấy nó sao lưu dữ liệu (PUT) hoặc lệnh xóa (DELETE) đến các replica.
-- Log của các replica node sẽ cho thấy chúng nhận và áp dụng lệnh sao lưu.
-- Client GET key từ các node khác nhau đều nhận được dữ liệu đúng (hoặc KHÔNG TÌM THẤY nếu đã xóa).
+1. Chọn Server Đích: Trong TUI, chọn một server (ví dụ node1) từ dropdown.
+2. PUT Dữ Liệu: Nhập lệnh PUT mykey myvalue và nhấn "Gửi Lệnh".
+- Quan sát Log TUI: Sẽ hiển thị "Dự kiến primary cho 'mykey': nodeX" và kết quả PUT.
+- Quan sát Log Server:
+Node được chọn (node1) sẽ nhận request. Nếu nó không phải primary (nodeX), nó sẽ log "Chuyển tiếp...".
+Node primary (nodeX) sẽ log việc xử lý PUT và "Bắt đầu sao lưu...".
+Các node replica sẽ log việc nhận lệnh sao lưu.
+3. GET Dữ Liệu:
+- Từ TUI (vẫn kết nối node1), nhập GET mykey. Kết quả phải là myvalue.
+- Trong TUI, đổi server đích sang một node khác (ví dụ node3). Nhập lại GET mykey. Kết quả vẫn phải là myvalue (chứng tỏ sao lưu và/hoặc forwarding hoạt động).
+4. DELETE Dữ Liệu: Tương tự như PUT, thực hiện lệnh DELETE mykey và quan sát log.
 
 ---
 
 ### Kiểm Thử Tính Chịu Lỗi
-Cách thực hiện: client.py sẽ tự động vào "KỊCH BẢN KIỂM THỬ CHỊU LỖI".
-- Client PUT một key (fault_key...) có primary là node2 và một key (survive_key...) có primary là một node khác (ví dụ node1).
-- Client sẽ yêu cầu bạn tắt node2.
-- Sau khi bạn tắt node2 và nhấn Enter trên client, client sẽ chờ để các node còn lại (node1, node3) phát hiện node2 đã DEAD qua heartbeat.
-
-Quan sát:
-- Log của node1 và node3 sẽ báo [HEARTBEAT] ... peer node2 ... -> DEAD.
-- Client thử GET/PUT fault_key...: Request sẽ thất bại với lỗi UNAVAILABLE vì node1 (hoặc node3) từ chối forward đến node2 (đã DEAD).
-- Client thử GET/PUT survive_key...: Request sẽ thành công. node1 (primary) sẽ xử lý, nhưng khi sao lưu, nó sẽ log là bỏ qua node2 vì DEAD.
+1. Hoạt động bình thường: PUT một key (key_cho_node2) mà bạn biết primary của nó là node2 (TUI sẽ báo "Dự kiến primary..."). PUT một key khác (key_cho_node1) có primary là node1.
+2. Tắt Node Primary: Tắt server node2 (Ctrl+C ở terminal của nó).
+3. Quan sát TUI: Sau vài giây, "Trạng Thái Cụm" sẽ hiển thị node2: [red]DEAD[/].
+4. Thao tác với Key của Node Đã Chết:
+- Trong TUI (kết nối qua node1), thử GET key_cho_node2.
+- Log TUI: Sẽ báo lỗi RPC UNAVAILABLE (vì node1 từ chối forward đến node2 đã chết).
+5. Thao tác với Key của Node Còn Sống:
+- Trong TUI (kết nối qua node1), thử PUT key_cho_node1 newValue.
+- Log TUI: Lệnh PUT thành công.
+- Log Server node1: Sẽ xử lý PUT và log "Bỏ qua sao lưu ... tới replica node2 (trạng thái: DEAD)".
 
 ---
 
 ### Kiểm Thử Khôi Phục Dữ Liệu
-Cách thực hiện: Sau kịch bản chịu lỗi, client.py sẽ vào "KỊCH BẢN KIỂM THỬ KHÔI PHỤC DỮ LIỆU". node2 vẫn đang tắt.
-- Client PUT một key mới (rec_down_key...) vào hệ thống (ví dụ qua node1). Key này sẽ được lưu trên node1 và node3. node2 không có nó.
-- Client sẽ yêu cầu bạn khởi động lại node2.
-- Sau khi bạn khởi động lại node2 và nhấn Enter trên client, client sẽ chờ để node2 sống lại, được phát hiện, và quan trọng nhất là thực hiện khôi phục dữ liệu.
-
-Quan sát:
-- Log của node2 khi khởi động lại: Sẽ có các dòng [RECOVERY], cho thấy nó đang cố gắng lấy snapshot từ node1 hoặc node3. Nó sẽ log "Khôi phục dữ liệu thành công từ nodeX..."
-- Log của node1 và node3: Sẽ báo [HEARTBEAT] ... peer node2 ... -> ALIVE. Node được node2 yêu cầu snapshot sẽ log [SNAPSHOT] ... Nhận yêu cầu RequestFullSnapshot....
-- Client thử GET rec_down_key... từ node2: Request này nên thành công và trả về giá trị đúng, chứng tỏ node2 đã khôi phục được dữ liệu được ghi khi nó offline.
+1. Node2 vẫn đang tắt (từ kịch bản trên).
+2. Ghi Dữ Liệu Mới: Trong TUI (kết nối qua node1), PUT key_moi_khi_node2_tat "important_data". Key này sẽ được lưu trên node1 và node3.
+3. Khởi Động Lại Node2: Chạy lại python server.py 50052 ở terminal của node2.
+4. Quan sát:
+- Log Server node2: Sẽ có các dòng [RECOVERY], cho thấy nó yêu cầu và nhận snapshot từ node1 hoặc node3. Log sẽ báo "Khôi phục dữ liệu thành công...".
+- TUI "Trạng Thái Cụm": node2 sẽ chuyển lại thành [green]ALIVE[/].
+5. Kiểm Tra Dữ Liệu trên Node2:
+- Trong TUI, chọn server đích là node2.
+- Nhập lệnh GET key_moi_khi_node2_tat.
+- Log TUI: Nên trả về "important_data", chứng tỏ node2 đã khôi phục được dữ liệu được ghi khi nó offline.
+- Thử GET các key cũ hơn (key_cho_node1, key_cho_node2) từ node2 để đảm bảo chúng cũng được khôi phục.
 
 ---
 
