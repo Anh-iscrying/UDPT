@@ -5,8 +5,8 @@ import time
 import threading 
 from concurrent import futures
 import grpc
-import demo_pb2 # Đảm bảo import sau khi đã generate lại
-import demo_pb2_grpc # Đảm bảo import sau khi đã generate lại
+import demo_pb2 
+import demo_pb2_grpc 
 
 # --- Cấu hình Node và Cụm ---
 PORT = None
@@ -122,9 +122,6 @@ class KeyValueServicer(demo_pb2_grpc.KeyValueServicer):
     def RequestFullSnapshot(self, request, context):
         print(f"[SNAPSHOT] Node {NODE_ID} ({PORT}): Nhận yêu cầu RequestFullSnapshot.")
         try:
-            # Cần đảm bảo thread-safety cho `store` nếu có nhiều thao tác ghi đồng thời.
-            # Với Python's GIL và dict operations, việc đọc đơn giản này thường an toàn,
-            # nhưng nếu store là một cấu trúc phức tạp hơn hoặc có sửa đổi trong lúc dump, cần lock.
             # Giả sử ở đây việc đọc `store` để dump là an toàn.
             data_json_snapshot = json.dumps(store)
             print(f"[SNAPSHOT] Node {NODE_ID} ({PORT}): Đã tạo snapshot, kích thước: {len(data_json_snapshot)} bytes. Gửi phản hồi.")
@@ -338,7 +335,6 @@ def attempt_data_recovery():
     global store
     # Chỉ thực hiện khôi phục nếu đây không phải là lần khởi động đầu tiên (ví dụ, file data đã tồn tại)
     # hoặc có một cơ chế khác để quyết định khi nào cần khôi phục.
-    # Để đơn giản cho demo, chúng ta có thể luôn thử khôi phục, nhưng thêm delay.
     
     print(f"[RECOVERY] Node {NODE_ID}: Chờ {INITIAL_RECOVERY_DELAY_SECONDS} giây trước khi thử khôi phục dữ liệu...")
     time.sleep(INITIAL_RECOVERY_DELAY_SECONDS)
@@ -379,10 +375,6 @@ def attempt_data_recovery():
                     new_store_data = json.loads(response.data_json)
                     
                     # Chiến lược: Ghi đè hoàn toàn store cục bộ
-                    # CẢNH BÁO: Điều này có thể ghi đè dữ liệu mới hơn nếu node này đã hoạt động
-                    # một mình và ghi dữ liệu mà các node khác không có.
-                    # Một chiến lược hợp nhất phức tạp hơn (ví dụ LWW) là cần thiết cho production.
-                    # Nhưng với yêu cầu "yêu cầu một ảnh chụp (snapshot) đầy đủ", đây là cách đơn giản.
                     print(f"[RECOVERY] Node {NODE_ID}: Store hiện tại có {len(store)} keys. Snapshot có {len(new_store_data)} keys.")
                     store = new_store_data 
                     save_store()
@@ -464,7 +456,7 @@ def serve():
     except KeyboardInterrupt:
         print(f"\n[INFO] Node {NODE_ID} ({PORT}): Nhận tín hiệu tắt (Ctrl+C). Đang tắt server...")
         save_store() 
-        # server_obj.stop(0) # Dừng server gRPC một cách nhẹ nhàng (có thể cần timeout)
+        # server_obj.stop(0) # Dừng server gRPC một cách nhẹ nhàng 
         print(f"[INFO] Node {NODE_ID} ({PORT}): Server đã tắt.")
 
 

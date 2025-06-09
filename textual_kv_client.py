@@ -130,7 +130,7 @@ class KVApp(App[None]):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         self.append_client_log(f"Nút được nhấn: {event.button.id}") # DEBUG LOG
 
-        if event.button.id == "send_button_widget": # SỬA ID Ở ĐÂY
+        if event.button.id == "send_button_widget": 
             command_text = self.command_input_widget.value.strip()
             self.command_input_widget.value = "" 
             if not command_text:
@@ -145,7 +145,7 @@ class KVApp(App[None]):
             threading.Thread(target=self._execute_command_thread, args=(command_text, self.selected_server_address)).start()
             self.append_client_log("Luồng thực thi lệnh đã được khởi chạy.") # DEBUG LOG
 
-        elif event.button.id == "refresh_status_button_widget": # SỬA ID Ở ĐÂY
+        elif event.button.id == "refresh_status_button_widget": 
             self.append_client_log("Làm mới trạng thái cụm...")
             threading.Thread(target=self._manual_refresh_status).start()
 
